@@ -10,14 +10,15 @@ import AllShops from './pages/AllShops';
 import ShopDetails from './pages/ShopDetails';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import AdminDashboard from './pages/AdminDashboard';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <Router>
+    <Router>
+      <AuthProvider>
+        <CartProvider>
           <div className="min-h-screen flex flex-col">
             <Navbar />
             <main className="flex-grow">
@@ -30,13 +31,14 @@ function App() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/shops" element={<AllShops />} />
                 <Route path="/shops/:id" element={<ShopDetails />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
               </Routes>
             </main>
             <Footer />
           </div>
-        </Router>
-      </CartProvider>
-    </AuthProvider>
+        </CartProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -1,10 +1,20 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Password validation function
   const validatePassword = (password) => {
@@ -95,119 +105,322 @@ export const AuthProvider = ({ children }) => {
     initializeTestAccounts();
 
     // Check for stored user data on component mount
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
+
+    // Initialize sample data if not exists
+    initializeSampleData();
   }, []);
 
-  const login = (email, password) => {
-    // Get all users from localStorage
+  const initializeSampleData = () => {
+    // Sample Users
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const serviceProviders = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+    if (users.length === 0) {
+      const sampleUsers = [
+        {
+          email: 'john@example.com',
+          password: 'User@123',
+          firstName: 'John',
+          lastName: 'Doe',
+          address: '123 Main St, Colombo',
+          province: 'Western',
+          district: 'Colombo',
+          role: 'user'
+        },
+        {
+          email: 'jane@example.com',
+          password: 'User@123',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          address: '456 Lake Rd, Kandy',
+          province: 'Central',
+          district: 'Kandy',
+          role: 'user'
+        },
+        {
+          email: 'mike@example.com',
+          password: 'User@123',
+          firstName: 'Mike',
+          lastName: 'Johnson',
+          address: '789 Beach Rd, Galle',
+          province: 'Southern',
+          district: 'Galle',
+          role: 'user'
+        },
+        {
+          email: 'sarah@example.com',
+          password: 'User@123',
+          firstName: 'Sarah',
+          lastName: 'Williams',
+          address: '321 Hill St, Nuwara Eliya',
+          province: 'Central',
+          district: 'Nuwara Eliya',
+          role: 'user'
+        },
+        {
+          email: 'david@example.com',
+          password: 'User@123',
+          firstName: 'David',
+          lastName: 'Brown',
+          address: '654 River Rd, Matara',
+          province: 'Southern',
+          district: 'Matara',
+          role: 'user'
+        }
+      ];
+      localStorage.setItem('users', JSON.stringify(sampleUsers));
+    }
+
+    // Sample Service Providers
+    const providers = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+    if (providers.length === 0) {
+      const sampleProviders = [
+        {
+          email: 'plumber@example.com',
+          password: 'Provider@123',
+          firstName: 'Alex',
+          lastName: 'Wilson',
+          address: '111 Pipe St, Colombo',
+          province: 'Western',
+          district: 'Colombo',
+          category: 'Plumbing',
+          experience: '5 years',
+          contactNumber: '0771234567',
+          role: 'provider',
+          approved: true
+        },
+        {
+          email: 'electrician@example.com',
+          password: 'Provider@123',
+          firstName: 'Tom',
+          lastName: 'Anderson',
+          address: '222 Wire Rd, Kandy',
+          province: 'Central',
+          district: 'Kandy',
+          category: 'Electrical',
+          experience: '8 years',
+          contactNumber: '0762345678',
+          role: 'provider',
+          approved: true
+        },
+        {
+          email: 'carpenter@example.com',
+          password: 'Provider@123',
+          firstName: 'Chris',
+          lastName: 'Taylor',
+          address: '333 Wood St, Galle',
+          province: 'Southern',
+          district: 'Galle',
+          category: 'Carpentry',
+          experience: '10 years',
+          contactNumber: '0753456789',
+          role: 'provider',
+          approved: false
+        },
+        {
+          email: 'painter@example.com',
+          password: 'Provider@123',
+          firstName: 'Sam',
+          lastName: 'Martin',
+          address: '444 Color Rd, Matara',
+          province: 'Southern',
+          district: 'Matara',
+          category: 'Painting',
+          experience: '6 years',
+          contactNumber: '0744567890',
+          role: 'provider',
+          approved: true
+        },
+        {
+          email: 'gardener@example.com',
+          password: 'Provider@123',
+          firstName: 'Luke',
+          lastName: 'Davis',
+          address: '555 Garden St, Nuwara Eliya',
+          province: 'Central',
+          district: 'Nuwara Eliya',
+          category: 'Gardening',
+          experience: '7 years',
+          contactNumber: '0735678901',
+          role: 'provider',
+          approved: false
+        }
+      ];
+      localStorage.setItem('serviceProviders', JSON.stringify(sampleProviders));
+    }
+
+    // Sample Shops
     const shops = JSON.parse(localStorage.getItem('shops') || '[]');
-
-    // Check user credentials (including admin)
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      const userData = { ...foundUser, role: foundUser.role || 'user' };
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return { success: true, role: userData.role };
+    if (shops.length === 0) {
+      const sampleShops = [
+        {
+          email: 'hardware@example.com',
+          password: 'Shop@123',
+          shopName: 'City Hardware Store',
+          address: '666 Tool Rd, Colombo',
+          province: 'Western',
+          district: 'Colombo',
+          location: 'City Center',
+          role: 'shop',
+          approved: true
+        },
+        {
+          email: 'furniture@example.com',
+          password: 'Shop@123',
+          shopName: 'Modern Furniture',
+          address: '777 Chair St, Kandy',
+          province: 'Central',
+          district: 'Kandy',
+          location: 'Shopping Mall',
+          role: 'shop',
+          approved: true
+        },
+        {
+          email: 'electronics@example.com',
+          password: 'Shop@123',
+          shopName: 'Tech World',
+          address: '888 Gadget Rd, Galle',
+          province: 'Southern',
+          district: 'Galle',
+          location: 'City Center',
+          role: 'shop',
+          approved: false
+        },
+        {
+          email: 'clothing@example.com',
+          password: 'Shop@123',
+          shopName: 'Fashion Hub',
+          address: '999 Style St, Matara',
+          province: 'Southern',
+          district: 'Matara',
+          location: 'Shopping Mall',
+          role: 'shop',
+          approved: true
+        },
+        {
+          email: 'books@example.com',
+          password: 'Shop@123',
+          shopName: 'Book Haven',
+          address: '000 Read Rd, Nuwara Eliya',
+          province: 'Central',
+          district: 'Nuwara Eliya',
+          location: 'City Center',
+          role: 'shop',
+          approved: false
+        }
+      ];
+      localStorage.setItem('shops', JSON.stringify(sampleShops));
     }
-
-    // Check service provider credentials
-    const foundProvider = serviceProviders.find(p => p.email === email && p.password === password);
-    if (foundProvider) {
-      const providerData = { ...foundProvider, role: 'provider' };
-      setUser(providerData);
-      localStorage.setItem('user', JSON.stringify(providerData));
-      return { success: true, role: 'provider' };
-    }
-
-    // Check shop credentials
-    const foundShop = shops.find(s => s.email === email && s.password === password);
-    if (foundShop) {
-      const shopData = { ...foundShop, role: 'shop' };
-      setUser(shopData);
-      localStorage.setItem('user', JSON.stringify(shopData));
-      return { success: true, role: 'shop' };
-    }
-
-    return { success: false, message: 'Invalid credentials' };
   };
 
-  const signup = (userData, type) => {
-    const { email, password, ...rest } = userData;
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return { success: false, message: 'Please enter a valid email address' };
-    }
-
-    // Validate password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      return { success: false, message: passwordValidation.message };
-    }
-
-    // Check if email already exists
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const serviceProviders = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
-    const shops = JSON.parse(localStorage.getItem('shops') || '[]');
-
-    if (users.some(u => u.email === email) ||
-        serviceProviders.some(p => p.email === email) ||
-        shops.some(s => s.email === email)) {
-      return { success: false, message: 'Email already exists' };
-    }
-
-    // Validate required fields based on type
-    let requiredFields = ['email', 'password', 'firstName', 'lastName', 'address', 'province', 'district'];
-    
-    if (type === 'provider') {
-      requiredFields = [...requiredFields, 'category', 'experience', 'contactNumber'];
-    } else if (type === 'shop') {
-      requiredFields = ['email', 'password', 'shopName', 'address', 'province', 'district', 'location'];
-    }
-
-    const missingFields = requiredFields.filter(field => !userData[field]);
-    if (missingFields.length > 0) {
-      return { 
-        success: false, 
-        message: `Please fill in all required fields: ${missingFields.join(', ')}` 
+  const login = (email, password) => {
+    // Check test accounts first
+    if (email === 'admin@example.com' && password === 'Admin@123') {
+      const adminUser = {
+        email,
+        role: 'admin',
+        firstName: 'Admin',
+        lastName: 'User'
       };
+      setUser(adminUser);
+      localStorage.setItem('currentUser', JSON.stringify(adminUser));
+      navigate('/admin-dashboard');
+      return;
     }
 
-    // Save user data based on type
-    try {
-      switch (type) {
-        case 'user':
-          users.push(userData);
-          localStorage.setItem('users', JSON.stringify(users));
-          break;
-        case 'provider':
-          serviceProviders.push(userData);
-          localStorage.setItem('serviceProviders', JSON.stringify(serviceProviders));
-          break;
-        case 'shop':
-          shops.push(userData);
-          localStorage.setItem('shops', JSON.stringify(shops));
-          break;
-        default:
-          return { success: false, message: 'Invalid user type' };
-      }
-      return { success: true };
-    } catch (error) {
-      return { success: false, message: 'Error saving user data. Please try again.' };
+    // Check regular users
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+      const { password, ...userWithoutPassword } = user;
+      setUser(userWithoutPassword);
+      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+      navigate('/');
+      return;
     }
+
+    // Check service providers
+    const providers = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+    const provider = providers.find(p => p.email === email && p.password === password);
+    if (provider) {
+      const { password, ...providerWithoutPassword } = provider;
+      setUser(providerWithoutPassword);
+      localStorage.setItem('currentUser', JSON.stringify(providerWithoutPassword));
+      navigate('/');
+      return;
+    }
+
+    // Check shops
+    const shops = JSON.parse(localStorage.getItem('shops') || '[]');
+    const shop = shops.find(s => s.email === email && s.password === password);
+    if (shop) {
+      const { password, ...shopWithoutPassword } = shop;
+      setUser(shopWithoutPassword);
+      localStorage.setItem('currentUser', JSON.stringify(shopWithoutPassword));
+      navigate('/');
+      return;
+    }
+
+    throw new Error('Invalid email or password');
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem('currentUser');
+    navigate('/');
+  };
+
+  const signup = (userData) => {
+    const { email, password, role } = userData;
+
+    // Check if email already exists in any user type
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const providers = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+    const shops = JSON.parse(localStorage.getItem('shops') || '[]');
+
+    if (users.some(u => u.email === email) ||
+        providers.some(p => p.email === email) ||
+        shops.some(s => s.email === email)) {
+      throw new Error('Email already exists');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Invalid email format');
+    }
+
+    // Validate password strength
+    if (!validatePassword(password)) {
+      throw new Error('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number');
+    }
+
+    // Store user data based on role
+    switch (role) {
+      case 'user':
+        users.push(userData);
+        localStorage.setItem('users', JSON.stringify(users));
+        break;
+      case 'provider':
+        providers.push({ ...userData, approved: false });
+        localStorage.setItem('serviceProviders', JSON.stringify(providers));
+        break;
+      case 'shop':
+        shops.push({ ...userData, approved: false });
+        localStorage.setItem('shops', JSON.stringify(shops));
+        break;
+      default:
+        throw new Error('Invalid role');
+    }
+
+    // Log in the user after successful signup
+    const { password: _, ...userWithoutPassword } = userData;
+    setUser(userWithoutPassword);
+    localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+    navigate('/');
   };
 
   if (loading) {
@@ -215,16 +428,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, validatePassword }}>
+    <AuthContext.Provider value={{ user, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }; 
