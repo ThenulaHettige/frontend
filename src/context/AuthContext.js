@@ -6,7 +6,94 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Password validation function
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    
+    if (password.length < minLength) {
+      return { isValid: false, message: 'Password must be at least 8 characters long' };
+    }
+    if (!hasUpperCase) {
+      return { isValid: false, message: 'Password must contain at least one uppercase letter' };
+    }
+    if (!hasLowerCase) {
+      return { isValid: false, message: 'Password must contain at least one lowercase letter' };
+    }
+    if (!hasNumber) {
+      return { isValid: false, message: 'Password must contain at least one number' };
+    }
+    return { isValid: true };
+  };
+
   useEffect(() => {
+    // Initialize test accounts in localStorage if they don't exist
+    const initializeTestAccounts = () => {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const serviceProviders = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+      const shops = JSON.parse(localStorage.getItem('shops') || '[]');
+
+      // Add test accounts if they don't exist
+      if (!users.some(u => u.email === 'user@example.com')) {
+        users.push({
+          email: 'user@example.com',
+          password: 'User@123',
+          firstName: 'Test',
+          lastName: 'User',
+          address: 'Test Address',
+          province: 'Western',
+          district: 'Colombo'
+        });
+      }
+
+      if (!serviceProviders.some(p => p.email === 'provider@example.com')) {
+        serviceProviders.push({
+          email: 'provider@example.com',
+          password: 'Provider@123',
+          firstName: 'Test',
+          lastName: 'Provider',
+          address: 'Test Address',
+          province: 'Western',
+          district: 'Colombo',
+          category: 'plumber',
+          experience: '5',
+          contactNumber: '0771234567'
+        });
+      }
+
+      if (!shops.some(s => s.email === 'shop@example.com')) {
+        shops.push({
+          email: 'shop@example.com',
+          password: 'Shop@123',
+          shopName: 'Test Shop',
+          address: 'Test Address',
+          province: 'Western',
+          district: 'Colombo',
+          location: 'Test Location'
+        });
+      }
+
+      // Add admin to users array
+      if (!users.some(u => u.email === 'admin@example.com')) {
+        users.push({
+          email: 'admin@example.com',
+          password: 'Admin@123',
+          role: 'admin',
+          name: 'Admin'
+        });
+      }
+
+      // Save updated arrays back to localStorage
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('serviceProviders', JSON.stringify(serviceProviders));
+      localStorage.setItem('shops', JSON.stringify(shops));
+    };
+
+    // Initialize test accounts
+    initializeTestAccounts();
+
     // Check for stored user data on component mount
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -16,61 +103,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (email, password) => {
-    // Test accounts
-    const testAccounts = {
-      'admin@example.com': {
-        email: 'admin@example.com',
-        password: 'Admin@123',
-        role: 'admin',
-        name: 'Admin'
-      },
-      'user@example.com': {
-        email: 'user@example.com',
-        password: 'User@123',
-        role: 'user',
-        firstName: 'Test',
-        lastName: 'User'
-      },
-      'provider@example.com': {
-        email: 'provider@example.com',
-        password: 'Provider@123',
-        role: 'provider',
-        firstName: 'Test',
-        lastName: 'Provider',
-        category: 'plumber',
-        experience: '5'
-      },
-      'shop@example.com': {
-        email: 'shop@example.com',
-        password: 'Shop@123',
-        role: 'shop',
-        shopName: 'Test Shop'
-      }
-    };
-
-    // Check if it's a test account
-    if (testAccounts[email]) {
-      const account = testAccounts[email];
-      if (account.password === password) {
-        const userData = { ...account };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        return { success: true, role: account.role };
-      }
-    }
-
     // Get all users from localStorage
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const serviceProviders = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
     const shops = JSON.parse(localStorage.getItem('shops') || '[]');
 
-    // Check user credentials
+    // Check user credentials (including admin)
     const foundUser = users.find(u => u.email === email && u.password === password);
     if (foundUser) {
-      const userData = { ...foundUser, role: 'user' };
+      const userData = { ...foundUser, role: foundUser.role || 'user' };
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      return { success: true, role: 'user' };
+      return { success: true, role: userData.role };
     }
 
     // Check service provider credentials
@@ -97,6 +141,18 @@ export const AuthProvider = ({ children }) => {
   const signup = (userData, type) => {
     const { email, password, ...rest } = userData;
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { success: false, message: 'Please enter a valid email address' };
+    }
+
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return { success: false, message: passwordValidation.message };
+    }
+
     // Check if email already exists
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const serviceProviders = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
@@ -108,25 +164,45 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: 'Email already exists' };
     }
 
-    // Save user data based on type
-    switch (type) {
-      case 'user':
-        users.push(userData);
-        localStorage.setItem('users', JSON.stringify(users));
-        break;
-      case 'provider':
-        serviceProviders.push(userData);
-        localStorage.setItem('serviceProviders', JSON.stringify(serviceProviders));
-        break;
-      case 'shop':
-        shops.push(userData);
-        localStorage.setItem('shops', JSON.stringify(shops));
-        break;
-      default:
-        return { success: false, message: 'Invalid user type' };
+    // Validate required fields based on type
+    let requiredFields = ['email', 'password', 'firstName', 'lastName', 'address', 'province', 'district'];
+    
+    if (type === 'provider') {
+      requiredFields = [...requiredFields, 'category', 'experience', 'contactNumber'];
+    } else if (type === 'shop') {
+      requiredFields = ['email', 'password', 'shopName', 'address', 'province', 'district', 'location'];
     }
 
-    return { success: true };
+    const missingFields = requiredFields.filter(field => !userData[field]);
+    if (missingFields.length > 0) {
+      return { 
+        success: false, 
+        message: `Please fill in all required fields: ${missingFields.join(', ')}` 
+      };
+    }
+
+    // Save user data based on type
+    try {
+      switch (type) {
+        case 'user':
+          users.push(userData);
+          localStorage.setItem('users', JSON.stringify(users));
+          break;
+        case 'provider':
+          serviceProviders.push(userData);
+          localStorage.setItem('serviceProviders', JSON.stringify(serviceProviders));
+          break;
+        case 'shop':
+          shops.push(userData);
+          localStorage.setItem('shops', JSON.stringify(shops));
+          break;
+        default:
+          return { success: false, message: 'Invalid user type' };
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: 'Error saving user data. Please try again.' };
+    }
   };
 
   const logout = () => {
@@ -139,7 +215,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, validatePassword }}>
       {children}
     </AuthContext.Provider>
   );

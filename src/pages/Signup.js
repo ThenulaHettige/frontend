@@ -63,9 +63,39 @@ const Signup = () => {
 
   // Password validation function
   const validatePassword = (password) => {
-    // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
-    return passwordRegex.test(password);
+    // Check minimum length
+    if (password.length < 8) {
+      return {
+        isValid: false,
+        message: 'Password must be at least 8 characters long'
+      };
+    }
+
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      return {
+        isValid: false,
+        message: 'Password must contain at least one uppercase letter'
+      };
+    }
+
+    // Check for lowercase letter
+    if (!/[a-z]/.test(password)) {
+      return {
+        isValid: false,
+        message: 'Password must contain at least one lowercase letter'
+      };
+    }
+
+    // Check for number
+    if (!/\d/.test(password)) {
+      return {
+        isValid: false,
+        message: 'Password must contain at least one number'
+      };
+    }
+
+    return { isValid: true };
   };
 
   const handleUserChange = (e) => {
@@ -82,14 +112,17 @@ const Signup = () => {
 
   const handleProviderChange = (e) => {
     const { name, value } = e.target;
-    setProviderForm(prev => {
-      const newForm = { ...prev, [name]: value };
-      // Reset district when province changes
-      if (name === 'province') {
-        newForm.district = '';
-      }
-      return newForm;
-    });
+    setProviderForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Reset district when province changes
+    if (name === 'province') {
+      setProviderForm(prev => ({
+        ...prev,
+        district: ''
+      }));
+    }
   };
 
   const handleShopChange = (e) => {
@@ -100,52 +133,58 @@ const Signup = () => {
     e.preventDefault();
     setError('');
 
-    let formData;
-    let type;
+    // Get the current form based on signup type
+    const currentForm = signupType === 'user' ? userForm :
+                       signupType === 'provider' ? providerForm :
+                       shopForm;
 
-    switch (signupType) {
-      case 'user':
-        formData = userForm;
-        type = 'user';
-        break;
-      case 'provider':
-        formData = providerForm;
-        type = 'provider';
-        break;
-      case 'shop':
-        formData = shopForm;
-        type = 'shop';
-        break;
-      default:
-        return;
-    }
-
-    // Validate email
-    if (!validateEmail(formData.email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    // Validate password
-    if (!validatePassword(formData.password)) {
-      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number');
-      return;
-    }
-
-    // Check if passwords match
-    if (formData.password !== formData.confirmPassword) {
+    // Validate password match
+    if (currentForm.password !== currentForm.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    // Remove confirmPassword before sending to backend
-    const { confirmPassword, ...dataToSubmit } = formData;
+    // Validate password strength
+    const passwordValidation = validatePassword(currentForm.password);
 
-    const result = await signup(dataToSubmit, type);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
+      return;
+    }
+
+    // Remove confirmPassword before sending to backend
+    const { confirmPassword, ...formDataToSubmit } = currentForm;
+
+    let result;
+    switch (signupType) {
+      case 'user':
+        result = await signup(formDataToSubmit, 'user');
+        break;
+      case 'provider':
+        result = await signup(formDataToSubmit, 'provider');
+        break;
+      case 'shop':
+        result = await signup(formDataToSubmit, 'shop');
+        break;
+      default:
+        setError('Invalid signup type');
+        return;
+    }
+
     if (result.success) {
-      navigate('/login');
+      // Redirect based on user type
+      switch (signupType) {
+        case 'provider':
+          navigate('/service-providers');
+          break;
+        case 'shop':
+          navigate('/shops');
+          break;
+        default:
+          navigate('/login');
+      }
     } else {
-      setError(result.message || 'Error during signup');
+      setError(result.message);
     }
   };
 
@@ -273,129 +312,151 @@ const Signup = () => {
 
   const renderProviderForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.email}
-        onChange={handleProviderChange}
-      />
-      <input
-        type="text"
-        name="firstName"
-        placeholder="First Name"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.firstName}
-        onChange={handleProviderChange}
-      />
-      <input
-        type="text"
-        name="lastName"
-        placeholder="Last Name"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.lastName}
-        onChange={handleProviderChange}
-      />
-      <select
-        name="category"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.category}
-        onChange={handleProviderChange}
-      >
-        <option value="">Select Category</option>
-        <option value="plumber">Plumber</option>
-        <option value="electrician">Electrician</option>
-        <option value="carpenter">Carpenter</option>
-        <option value="painter">Painter</option>
-        <option value="hvac">HVAC</option>
-      </select>
-      <input
-        type="text"
-        name="address"
-        placeholder="Address"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.address}
-        onChange={handleProviderChange}
-      />
-      <select
-        name="province"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.province}
-        onChange={handleProviderChange}
-      >
-        <option value="">Select Province</option>
-        <option value="western">Western Province</option>
-        <option value="central">Central Province</option>
-        <option value="southern">Southern Province</option>
-        <option value="northern">Northern Province</option>
-        <option value="eastern">Eastern Province</option>
-        <option value="north-western">North Western Province</option>
-        <option value="north-central">North Central Province</option>
-        <option value="uva">Uva Province</option>
-        <option value="sabaragamuwa">Sabaragamuwa Province</option>
-      </select>
-      {providerForm.province && (
-        <select
-          name="district"
-          required
-          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-          value={providerForm.district}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Email</label>
+        <input
+          type="email"
+          name="email"
+          value={providerForm.email}
           onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">First Name</label>
+        <input
+          type="text"
+          name="firstName"
+          value={providerForm.firstName}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Last Name</label>
+        <input
+          type="text"
+          name="lastName"
+          value={providerForm.lastName}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Address</label>
+        <input
+          type="text"
+          name="address"
+          value={providerForm.address}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Province</label>
+        <select
+          name="province"
+          value={providerForm.province}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="">Select District</option>
-          {districtsByProvince[providerForm.province].map((district) => (
-            <option key={district} value={district.toLowerCase()}>
-              {district}
-            </option>
+          <option value="">Select Province</option>
+          {Object.keys(districtsByProvince).map(province => (
+            <option key={province} value={province}>{province}</option>
           ))}
         </select>
+      </div>
+      {providerForm.province && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700">District</label>
+          <select
+            name="district"
+            value={providerForm.district}
+            onChange={handleProviderChange}
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">Select District</option>
+            {districtsByProvince[providerForm.province].map(district => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
+        </div>
       )}
-      <input
-        type="number"
-        name="experience"
-        placeholder="Years of Experience"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.experience}
-        onChange={handleProviderChange}
-      />
-      <input
-        type="tel"
-        name="contactNumber"
-        placeholder="Contact Number"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.contactNumber}
-        onChange={handleProviderChange}
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.password}
-        onChange={handleProviderChange}
-      />
-      <input
-        type="password"
-        name="confirmPassword"
-        placeholder="Confirm Password"
-        required
-        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        value={providerForm.confirmPassword}
-        onChange={handleProviderChange}
-      />
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Category</label>
+        <select
+          name="category"
+          value={providerForm.category}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="">Select Category</option>
+          <option value="plumber">Plumber</option>
+          <option value="electrician">Electrician</option>
+          <option value="carpenter">Carpenter</option>
+          <option value="painter">Painter</option>
+          <option value="mason">Mason</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Experience (years)</label>
+        <input
+          type="number"
+          name="experience"
+          value={providerForm.experience}
+          onChange={handleProviderChange}
+          required
+          min="0"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Contact Number</label>
+        <input
+          type="tel"
+          name="contactNumber"
+          value={providerForm.contactNumber}
+          onChange={handleProviderChange}
+          required
+          pattern="[0-9]{10}"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          name="password"
+          value={providerForm.password}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number
+        </p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+        <input
+          type="password"
+          name="confirmPassword"
+          value={providerForm.confirmPassword}
+          onChange={handleProviderChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
       <button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
       >
         Sign Up
       </button>
