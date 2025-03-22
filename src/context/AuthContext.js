@@ -16,16 +16,47 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (email, password) => {
-    // Hardcoded admin credentials
-    if (email === 'admin@example.com' && password === 'Admin@123') {
-      const adminUser = {
-        email,
+    // Test accounts
+    const testAccounts = {
+      'admin@example.com': {
+        email: 'admin@example.com',
+        password: 'Admin@123',
         role: 'admin',
         name: 'Admin'
-      };
-      setUser(adminUser);
-      localStorage.setItem('user', JSON.stringify(adminUser));
-      return { success: true, role: 'admin' };
+      },
+      'user@example.com': {
+        email: 'user@example.com',
+        password: 'User@123',
+        role: 'user',
+        firstName: 'Test',
+        lastName: 'User'
+      },
+      'provider@example.com': {
+        email: 'provider@example.com',
+        password: 'Provider@123',
+        role: 'provider',
+        firstName: 'Test',
+        lastName: 'Provider',
+        category: 'plumber',
+        experience: '5'
+      },
+      'shop@example.com': {
+        email: 'shop@example.com',
+        password: 'Shop@123',
+        role: 'shop',
+        shopName: 'Test Shop'
+      }
+    };
+
+    // Check if it's a test account
+    if (testAccounts[email]) {
+      const account = testAccounts[email];
+      if (account.password === password) {
+        const userData = { ...account };
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return { success: true, role: account.role };
+      }
     }
 
     // Get all users from localStorage

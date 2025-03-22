@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// Sri Lankan districts by province
+const districtsByProvince = {
+  western: ['Colombo', 'Gampaha', 'Kalutara'],
+  central: ['Kandy', 'Matale', 'Nuwara Eliya'],
+  southern: ['Galle', 'Matara', 'Hambantota'],
+  northern: ['Jaffna', 'Kilinochchi', 'Mannar', 'Vavuniya', 'Mullaitivu'],
+  eastern: ['Batticaloa', 'Ampara', 'Trincomalee'],
+  'north-western': ['Kurunegala', 'Puttalam'],
+  'north-central': ['Anuradhapura', 'Polonnaruwa'],
+  uva: ['Badulla', 'Monaragala'],
+  sabaragamuwa: ['Ratnapura', 'Kegalle']
+};
+
 const Signup = () => {
   const [signupType, setSignupType] = useState(null);
   const [error, setError] = useState('');
@@ -14,7 +27,9 @@ const Signup = () => {
     lastName: '',
     address: '',
     province: '',
-    password: ''
+    district: '',
+    password: '',
+    confirmPassword: ''
   });
 
   const [providerForm, setProviderForm] = useState({
@@ -24,9 +39,11 @@ const Signup = () => {
     category: '',
     address: '',
     province: '',
+    district: '',
     experience: '',
     contactNumber: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const [shopForm, setShopForm] = useState({
@@ -34,15 +51,45 @@ const Signup = () => {
     shopName: '',
     location: '',
     contactNumber: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Password validation function
+  const validatePassword = (password) => {
+    // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handleUserChange = (e) => {
-    setUserForm({ ...userForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setUserForm(prev => {
+      const newForm = { ...prev, [name]: value };
+      // Reset district when province changes
+      if (name === 'province') {
+        newForm.district = '';
+      }
+      return newForm;
+    });
   };
 
   const handleProviderChange = (e) => {
-    setProviderForm({ ...providerForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setProviderForm(prev => {
+      const newForm = { ...prev, [name]: value };
+      // Reset district when province changes
+      if (name === 'province') {
+        newForm.district = '';
+      }
+      return newForm;
+    });
   };
 
   const handleShopChange = (e) => {
@@ -73,7 +120,28 @@ const Signup = () => {
         return;
     }
 
-    const result = await signup(formData, type);
+    // Validate email
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Validate password
+    if (!validatePassword(formData.password)) {
+      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number');
+      return;
+    }
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Remove confirmPassword before sending to backend
+    const { confirmPassword, ...dataToSubmit } = formData;
+
+    const result = await signup(dataToSubmit, type);
     if (result.success) {
       navigate('/login');
     } else {
@@ -142,15 +210,40 @@ const Signup = () => {
         value={userForm.address}
         onChange={handleUserChange}
       />
-      <input
-        type="text"
+      <select
         name="province"
-        placeholder="Province"
         required
         className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
         value={userForm.province}
         onChange={handleUserChange}
-      />
+      >
+        <option value="">Select Province</option>
+        <option value="western">Western Province</option>
+        <option value="central">Central Province</option>
+        <option value="southern">Southern Province</option>
+        <option value="northern">Northern Province</option>
+        <option value="eastern">Eastern Province</option>
+        <option value="north-western">North Western Province</option>
+        <option value="north-central">North Central Province</option>
+        <option value="uva">Uva Province</option>
+        <option value="sabaragamuwa">Sabaragamuwa Province</option>
+      </select>
+      {userForm.province && (
+        <select
+          name="district"
+          required
+          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+          value={userForm.district}
+          onChange={handleUserChange}
+        >
+          <option value="">Select District</option>
+          {districtsByProvince[userForm.province].map((district) => (
+            <option key={district} value={district.toLowerCase()}>
+              {district}
+            </option>
+          ))}
+        </select>
+      )}
       <input
         type="password"
         name="password"
@@ -158,6 +251,15 @@ const Signup = () => {
         required
         className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
         value={userForm.password}
+        onChange={handleUserChange}
+      />
+      <input
+        type="password"
+        name="confirmPassword"
+        placeholder="Confirm Password"
+        required
+        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+        value={userForm.confirmPassword}
         onChange={handleUserChange}
       />
       <button
@@ -221,15 +323,40 @@ const Signup = () => {
         value={providerForm.address}
         onChange={handleProviderChange}
       />
-      <input
-        type="text"
+      <select
         name="province"
-        placeholder="Province"
         required
         className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
         value={providerForm.province}
         onChange={handleProviderChange}
-      />
+      >
+        <option value="">Select Province</option>
+        <option value="western">Western Province</option>
+        <option value="central">Central Province</option>
+        <option value="southern">Southern Province</option>
+        <option value="northern">Northern Province</option>
+        <option value="eastern">Eastern Province</option>
+        <option value="north-western">North Western Province</option>
+        <option value="north-central">North Central Province</option>
+        <option value="uva">Uva Province</option>
+        <option value="sabaragamuwa">Sabaragamuwa Province</option>
+      </select>
+      {providerForm.province && (
+        <select
+          name="district"
+          required
+          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+          value={providerForm.district}
+          onChange={handleProviderChange}
+        >
+          <option value="">Select District</option>
+          {districtsByProvince[providerForm.province].map((district) => (
+            <option key={district} value={district.toLowerCase()}>
+              {district}
+            </option>
+          ))}
+        </select>
+      )}
       <input
         type="number"
         name="experience"
@@ -255,6 +382,15 @@ const Signup = () => {
         required
         className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
         value={providerForm.password}
+        onChange={handleProviderChange}
+      />
+      <input
+        type="password"
+        name="confirmPassword"
+        placeholder="Confirm Password"
+        required
+        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+        value={providerForm.confirmPassword}
         onChange={handleProviderChange}
       />
       <button
@@ -311,6 +447,15 @@ const Signup = () => {
         required
         className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
         value={shopForm.password}
+        onChange={handleShopChange}
+      />
+      <input
+        type="password"
+        name="confirmPassword"
+        placeholder="Confirm Password"
+        required
+        className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+        value={shopForm.confirmPassword}
         onChange={handleShopChange}
       />
       <button
