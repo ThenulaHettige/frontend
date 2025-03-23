@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Footer from './components/Footer';
 import ServiceProviders from './pages/ServiceProviders';
+import ServiceProviderProfile from './pages/ServiceProviderProfile';
 import Marketplace from './pages/Marketplace';
 import Cart from './pages/Cart';
 import AllShops from './pages/AllShops';
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/service-providers" element={<ServiceProviders />} />
+                <Route path="/service-providers/:id" element={<ServiceProviderProfile />} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/shops" element={<AllShops />} />
