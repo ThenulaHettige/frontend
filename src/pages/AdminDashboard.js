@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 // Create styles for PDF
 const styles = StyleSheet.create({
@@ -337,11 +342,108 @@ const AdminDashboard = () => {
     )
   };
 
+  // Chart data
+  const userTypeData = {
+    labels: ['Users', 'Service Providers', 'Shops'],
+    datasets: [
+      {
+        data: [users.length, providers.length, shops.length],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(75, 192, 192, 0.8)'
+        ],
+        borderColor: [
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(75, 192, 192, 1)'
+        ],
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const approvalStatusData = {
+    labels: ['Service Providers', 'Shops'],
+    datasets: [
+      {
+        label: 'Approved',
+        data: [
+          providers.filter(p => p.approved).length,
+          shops.filter(s => s.approved).length
+        ],
+        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      },
+      {
+        label: 'Pending',
+        data: [
+          providers.filter(p => !p.approved).length,
+          shops.filter(s => !s.approved).length
+        ],
+        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const categoryData = {
+    labels: [...new Set(providers.map(p => p.category))],
+    datasets: [
+      {
+        label: 'Service Providers by Category',
+        data: [...new Set(providers.map(p => p.category))].map(category => 
+          providers.filter(p => p.category === category).length
+        ),
+        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Dashboard Statistics'
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <ReportButton />
+      </div>
+      
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">User Distribution</h2>
+          <div className="h-64">
+            <Pie data={userTypeData} options={chartOptions} />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Approval Status</h2>
+          <div className="h-64">
+            <Bar data={approvalStatusData} options={chartOptions} />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow md:col-span-2">
+          <h2 className="text-xl font-semibold mb-4">Service Provider Categories</h2>
+          <div className="h-64">
+            <Bar data={categoryData} options={chartOptions} />
+          </div>
+        </div>
       </div>
       
       {/* Tabs */}
