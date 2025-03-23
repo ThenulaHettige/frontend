@@ -96,6 +96,14 @@ const Navbar = () => {
                       My Dashboard
                     </Link>
                   )}
+                  {user.role === 'shop' && (
+                    <Link
+                      to="/shop-dashboard"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Shop Dashboard
+                    </Link>
+                  )}
                   <span className="text-gray-700">
                     {user.role === 'admin' ? 'Admin' :
                      user.role === 'provider' ? `${user.firstName} ${user.lastName}` :
@@ -239,6 +247,14 @@ const Navbar = () => {
                     className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                   >
                     My Dashboard
+                  </Link>
+                )}
+                {user.role === 'shop' && (
+                  <Link
+                    to="/shop-dashboard"
+                    className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+                  >
+                    Shop Dashboard
                   </Link>
                 )}
                 <div className="pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500">

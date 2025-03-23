@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AdminDashboard from './pages/AdminDashboard';
 import ServiceProviderDashboard from './pages/ServiceProviderDashboard';
+import ShopDashboard from './pages/ShopDashboard';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/shops/:id" element={<ShopDetails />} />
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/provider-dashboard/*" element={<ServiceProviderDashboard />} />
+                <Route path="/shop-dashboard/*" element={<ShopDashboard />} />
               </Routes>
             </main>
             <Footer />
