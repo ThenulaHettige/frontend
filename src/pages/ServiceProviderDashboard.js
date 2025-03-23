@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, MessageSquare, User, LogOut } from 'lucide-react';
+import { Home, MessageSquare, User, LogOut, Briefcase, Star } from 'lucide-react';
 
 const ServiceProviderDashboard = () => {
   const { user, logout } = useAuth();
@@ -21,6 +21,8 @@ const ServiceProviderDashboard = () => {
 
   const navigation = [
     { name: 'Home', href: '/provider-dashboard', icon: Home },
+    { name: 'Previous Works', href: '/provider-dashboard/works', icon: Briefcase },
+    { name: 'Reviews', href: '/provider-dashboard/reviews', icon: Star },
     { name: 'User Inquiries', href: '/provider-dashboard/inquiries', icon: MessageSquare },
     { name: 'Profile Settings', href: '/provider-dashboard/profile', icon: User },
   ];
@@ -70,6 +72,8 @@ const ServiceProviderDashboard = () => {
         <div className="p-8">
           <Routes>
             <Route path="/" element={<DashboardHome />} />
+            <Route path="/works" element={<PreviousWorks />} />
+            <Route path="/reviews" element={<Reviews />} />
             <Route path="/inquiries" element={<UserInquiries />} />
             <Route path="/profile" element={<ProfileSettings />} />
           </Routes>
@@ -132,6 +136,342 @@ const DashboardHome = () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Previous Works Component
+const PreviousWorks = () => {
+  const [works, setWorks] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingWork, setEditingWork] = useState(null);
+  const [formData, setFormData] = useState({
+    description: '',
+    price: '',
+    beforeImage: null,
+    afterImage: null,
+  });
+
+  useEffect(() => {
+    const storedWorks = JSON.parse(localStorage.getItem('previousWorks')) || [];
+    setWorks(storedWorks);
+  }, []);
+
+  const handleImageChange = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          [type]: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newWork = {
+      id: editingWork?.id || Date.now(),
+      ...formData,
+    };
+
+    if (editingWork) {
+      setWorks(prev => prev.map(work => work.id === editingWork.id ? newWork : work));
+    } else {
+      setWorks(prev => [...prev, newWork]);
+    }
+
+    localStorage.setItem('previousWorks', JSON.stringify([...works, newWork]));
+    setShowAddForm(false);
+    setEditingWork(null);
+    setFormData({
+      description: '',
+      price: '',
+      beforeImage: null,
+      afterImage: null,
+    });
+  };
+
+  const handleEdit = (work) => {
+    setEditingWork(work);
+    setFormData(work);
+    setShowAddForm(true);
+  };
+
+  const handleDelete = (id) => {
+    const updatedWorks = works.filter(work => work.id !== id);
+    setWorks(updatedWorks);
+    localStorage.setItem('previousWorks', JSON.stringify(updatedWorks));
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Previous Works</h1>
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+        >
+          Add New Work
+        </button>
+      </div>
+
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
+            <h2 className="text-xl font-semibold mb-4">
+              {editingWork ? 'Edit Work' : 'Add New Work'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Price</label>
+                <input
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Before Fix Photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'beforeImage')}
+                  className="mt-1 block w-full"
+                  required={!editingWork}
+                />
+                {formData.beforeImage && (
+                  <img src={formData.beforeImage} alt="Before" className="mt-2 h-32 w-32 object-cover rounded" />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">After Fix Photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'afterImage')}
+                  className="mt-1 block w-full"
+                  required={!editingWork}
+                />
+                {formData.afterImage && (
+                  <img src={formData.afterImage} alt="After" className="mt-2 h-32 w-32 object-cover rounded" />
+                )}
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingWork(null);
+                    setFormData({
+                      description: '',
+                      price: '',
+                      beforeImage: null,
+                      afterImage: null,
+                    });
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                >
+                  {editingWork ? 'Update' : 'Add'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Before Fix</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">After Fix</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {works.map((work) => (
+              <tr key={work.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{work.description}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${work.price}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <img
+                    src={work.beforeImage}
+                    alt="Before"
+                    className="h-10 w-10 rounded-full cursor-pointer"
+                    onClick={() => window.open(work.beforeImage, '_blank')}
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <img
+                    src={work.afterImage}
+                    alt="After"
+                    className="h-10 w-10 rounded-full cursor-pointer"
+                    onClick={() => window.open(work.afterImage, '_blank')}
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <button
+                    onClick={() => handleEdit(work)}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(work.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Reviews Component
+const Reviews = () => {
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    const storedReviews = JSON.parse(localStorage.getItem('reviews'));
+    if (!storedReviews || storedReviews.length === 0) {
+      const sampleReviews = [
+        {
+          id: 1,
+          userName: "John Doe",
+          rating: 5,
+          text: "Excellent service! Fixed my electrical issues quickly and professionally."
+        },
+        {
+          id: 2,
+          userName: "Sarah Wilson",
+          rating: 4,
+          text: "Very knowledgeable plumber. Solved my complex plumbing problem efficiently."
+        },
+        {
+          id: 3,
+          userName: "Michael Brown",
+          rating: 5,
+          text: "Great work on my home renovation. Very clean and professional."
+        },
+        {
+          id: 4,
+          userName: "Emma Davis",
+          rating: 4,
+          text: "Good service overall. Would recommend for basic repairs."
+        },
+        {
+          id: 5,
+          userName: "David Lee",
+          rating: 5,
+          text: "Outstanding work on my kitchen remodeling. Very satisfied!"
+        },
+        {
+          id: 6,
+          userName: "Lisa Anderson",
+          rating: 4,
+          text: "Professional and punctual. Fixed my AC issues in no time."
+        },
+        {
+          id: 7,
+          userName: "Robert Taylor",
+          rating: 5,
+          text: "Best carpenter I've worked with. Quality workmanship!"
+        },
+        {
+          id: 8,
+          userName: "Jennifer White",
+          rating: 4,
+          text: "Good communication and reasonable pricing. Would hire again."
+        },
+        {
+          id: 9,
+          userName: "Thomas Martin",
+          rating: 5,
+          text: "Expert in his field. Solved my complex wiring issues safely."
+        },
+        {
+          id: 10,
+          userName: "Mary Johnson",
+          rating: 4,
+          text: "Very helpful and friendly. Completed the work on time."
+        }
+      ];
+      localStorage.setItem('reviews', JSON.stringify(sampleReviews));
+      setReviews(sampleReviews);
+    } else {
+      setReviews(storedReviews);
+    }
+  }, []);
+
+  const handleDelete = (id) => {
+    const updatedReviews = reviews.filter(review => review.id !== id);
+    setReviews(updatedReviews);
+    localStorage.setItem('reviews', JSON.stringify(updatedReviews));
+  };
+
+  return (
+    <div>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Customer Reviews</h1>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Review</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {reviews.map((review) => (
+              <tr key={review.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{review.userName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {'⭐'.repeat(review.rating)}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900">{review.text}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    onClick={() => handleDelete(review.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
