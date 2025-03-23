@@ -250,14 +250,31 @@ const ProfileSettings = () => {
     contactNumber: user?.contactNumber || '',
     address: user?.address || '',
     hourlyRate: user?.hourlyRate || '',
+    profilePicture: user?.profilePicture || '',
   });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [previewImage, setPreviewImage] = useState(user?.profilePicture || '');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+        setFormData({
+          ...formData,
+          profilePicture: reader.result,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -293,6 +310,37 @@ const ProfileSettings = () => {
       </div>
       <div className="mt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Picture Upload */}
+          <div className="flex items-center space-x-6">
+            <div className="relative">
+              <img
+                src={previewImage || 'https://via.placeholder.com/150'}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+              />
+              <label
+                htmlFor="profile-picture"
+                className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+              </label>
+              <input
+                type="file"
+                id="profile-picture"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Profile Picture</h3>
+              <p className="text-sm text-gray-500">Upload a new profile picture</p>
+              <p className="text-xs text-gray-400 mt-1">Recommended: Square image, max 2MB</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700">First Name</label>
