@@ -133,58 +133,82 @@ const Signup = () => {
     e.preventDefault();
     setError('');
 
-    // Get the current form based on signup type
-    const currentForm = signupType === 'user' ? userForm :
-                       signupType === 'provider' ? providerForm :
-                       shopForm;
+    try {
+      if (signupType === 'user') {
+        // Validate passwords match
+        if (userForm.password !== userForm.confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
 
-    // Validate password match
-    if (currentForm.password !== currentForm.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+        // Validate password strength
+        const passwordValidation = validatePassword(userForm.password);
+        if (!passwordValidation.isValid) {
+          setError(passwordValidation.message);
+          return;
+        }
 
-    // Validate password strength
-    const passwordValidation = validatePassword(currentForm.password);
+        // Validate email format
+        if (!validateEmail(userForm.email)) {
+          setError('Please enter a valid email address');
+          return;
+        }
 
-    if (!passwordValidation.isValid) {
-      setError(passwordValidation.message);
-      return;
-    }
+        await signup({
+          ...userForm,
+          role: 'user'
+        });
+      } else if (signupType === 'provider') {
+        // Validate passwords match
+        if (providerForm.password !== providerForm.confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
 
-    // Remove confirmPassword before sending to backend
-    const { confirmPassword, ...formDataToSubmit } = currentForm;
+        // Validate password strength
+        const passwordValidation = validatePassword(providerForm.password);
+        if (!passwordValidation.isValid) {
+          setError(passwordValidation.message);
+          return;
+        }
 
-    let result;
-    switch (signupType) {
-      case 'user':
-        result = await signup(formDataToSubmit, 'user');
-        break;
-      case 'provider':
-        result = await signup(formDataToSubmit, 'provider');
-        break;
-      case 'shop':
-        result = await signup(formDataToSubmit, 'shop');
-        break;
-      default:
-        setError('Invalid signup type');
-        return;
-    }
+        // Validate email format
+        if (!validateEmail(providerForm.email)) {
+          setError('Please enter a valid email address');
+          return;
+        }
 
-    if (result.success) {
-      // Redirect based on user type
-      switch (signupType) {
-        case 'provider':
-          navigate('/service-providers');
-          break;
-        case 'shop':
-          navigate('/shops');
-          break;
-        default:
-          navigate('/login');
+        await signup({
+          ...providerForm,
+          role: 'provider'
+        });
+      } else if (signupType === 'shop') {
+        // Validate passwords match
+        if (shopForm.password !== shopForm.confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
+
+        // Validate password strength
+        const passwordValidation = validatePassword(shopForm.password);
+        if (!passwordValidation.isValid) {
+          setError(passwordValidation.message);
+          return;
+        }
+
+        // Validate email format
+        if (!validateEmail(shopForm.email)) {
+          setError('Please enter a valid email address');
+          return;
+        }
+
+        await signup({
+          ...shopForm,
+          role: 'shop'
+        });
       }
-    } else {
-      setError(result.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
