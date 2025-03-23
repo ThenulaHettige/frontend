@@ -179,13 +179,15 @@ const PreviousWorks = () => {
       ...formData,
     };
 
+    let updatedWorks;
     if (editingWork) {
-      setWorks(prev => prev.map(work => work.id === editingWork.id ? newWork : work));
+      updatedWorks = works.map(work => work.id === editingWork.id ? newWork : work);
     } else {
-      setWorks(prev => [...prev, newWork]);
+      updatedWorks = [...works, newWork];
     }
 
-    localStorage.setItem('previousWorks', JSON.stringify([...works, newWork]));
+    setWorks(updatedWorks);
+    localStorage.setItem('previousWorks', JSON.stringify(updatedWorks));
     setShowAddForm(false);
     setEditingWork(null);
     setFormData({
@@ -221,12 +223,39 @@ const PreviousWorks = () => {
       </div>
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingWork ? 'Edit Work' : 'Add New Work'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl my-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">
+                {editingWork ? 'Edit Work' : 'Add New Work'}
+              </h2>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingWork(null);
+                    setFormData({
+                      description: '',
+                      price: '',
+                      beforeImage: null,
+                      afterImage: null,
+                    });
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="workForm"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                >
+                  {editingWork ? 'Update' : 'Add'}
+                </button>
+              </div>
+            </div>
+            <form id="workForm" onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <input
@@ -247,55 +276,33 @@ const PreviousWorks = () => {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Before Fix Photo</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageChange(e, 'beforeImage')}
-                  className="mt-1 block w-full"
-                  required={!editingWork}
-                />
-                {formData.beforeImage && (
-                  <img src={formData.beforeImage} alt="Before" className="mt-2 h-32 w-32 object-cover rounded" />
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">After Fix Photo</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageChange(e, 'afterImage')}
-                  className="mt-1 block w-full"
-                  required={!editingWork}
-                />
-                {formData.afterImage && (
-                  <img src={formData.afterImage} alt="After" className="mt-2 h-32 w-32 object-cover rounded" />
-                )}
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setEditingWork(null);
-                    setFormData({
-                      description: '',
-                      price: '',
-                      beforeImage: null,
-                      afterImage: null,
-                    });
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-                >
-                  {editingWork ? 'Update' : 'Add'}
-                </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Before Fix Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e, 'beforeImage')}
+                    className="mt-1 block w-full"
+                    required={!editingWork}
+                  />
+                  {formData.beforeImage && (
+                    <img src={formData.beforeImage} alt="Before" className="mt-2 h-32 w-32 object-cover rounded" />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">After Fix Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e, 'afterImage')}
+                    className="mt-1 block w-full"
+                    required={!editingWork}
+                  />
+                  {formData.afterImage && (
+                    <img src={formData.afterImage} alt="After" className="mt-2 h-32 w-32 object-cover rounded" />
+                  )}
+                </div>
               </div>
             </form>
           </div>
@@ -322,7 +329,7 @@ const PreviousWorks = () => {
                   <img
                     src={work.beforeImage}
                     alt="Before"
-                    className="h-10 w-10 rounded-full cursor-pointer"
+                    className="h-24 w-24 rounded-lg object-cover cursor-pointer hover:scale-105 transition-transform"
                     onClick={() => window.open(work.beforeImage, '_blank')}
                   />
                 </td>
@@ -330,7 +337,7 @@ const PreviousWorks = () => {
                   <img
                     src={work.afterImage}
                     alt="After"
-                    className="h-10 w-10 rounded-full cursor-pointer"
+                    className="h-24 w-24 rounded-lg object-cover cursor-pointer hover:scale-105 transition-transform"
                     onClick={() => window.open(work.afterImage, '_blank')}
                   />
                 </td>
