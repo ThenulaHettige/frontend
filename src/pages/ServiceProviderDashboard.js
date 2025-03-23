@@ -240,7 +240,7 @@ const UserInquiries = () => {
 
 // Profile Settings Component
 const ProfileSettings = () => {
-  const { user } = useAuth();
+  const { user, updateProfile, deleteProfile } = useAuth();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -250,6 +250,7 @@ const ProfileSettings = () => {
     contactNumber: user?.contactNumber || '',
     address: user?.address || '',
   });
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -260,17 +261,35 @@ const ProfileSettings = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Update profile in localStorage
-    const providers = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
-    const updatedProviders = providers.map(provider =>
-      provider.email === user.email ? { ...provider, ...formData } : provider
-    );
-    localStorage.setItem('serviceProviders', JSON.stringify(updatedProviders));
+    updateProfile(formData);
+    setShowSuccess(true);
+    // Hide the notification after 3 seconds
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 3000);
+  };
+
+  const handleDeleteProfile = () => {
+    if (window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')) {
+      deleteProfile();
+    }
   };
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Profile Settings</h1>
+      {/* Success Notification */}
+      <div className={`fixed top-4 right-4 z-50 transition-all duration-500 transform ${showSuccess ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative shadow-lg">
+          <span className="block sm:inline">Profile updated successfully!</span>
+          <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <svg className="fill-current h-4 w-4 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Close</title>
+              <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+          </span>
+        </div>
+      </div>
       <div className="mt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -352,7 +371,14 @@ const ProfileSettings = () => {
               />
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={handleDeleteProfile}
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Delete Profile
+            </button>
             <button
               type="submit"
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

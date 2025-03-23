@@ -368,8 +368,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setUser(null);
     localStorage.removeItem('currentUser');
+    setUser(null);
+    navigate('/');
+  };
+
+  const updateProfile = (updatedData) => {
+    const providers = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+    const updatedProviders = providers.map(provider =>
+      provider.email === user.email ? { ...provider, ...updatedData } : provider
+    );
+    localStorage.setItem('serviceProviders', JSON.stringify(updatedProviders));
+    
+    // Update current user state
+    setUser(prevUser => ({ ...prevUser, ...updatedData }));
+    localStorage.setItem('currentUser', JSON.stringify({ ...user, ...updatedData }));
+  };
+
+  const deleteProfile = () => {
+    const providers = JSON.parse(localStorage.getItem('serviceProviders') || '[]');
+    const updatedProviders = providers.filter(provider => provider.email !== user.email);
+    localStorage.setItem('serviceProviders', JSON.stringify(updatedProviders));
+    
+    // Clear current user and redirect to home
+    localStorage.removeItem('currentUser');
+    setUser(null);
     navigate('/');
   };
 
@@ -428,7 +451,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, login, logout, signup, updateProfile, deleteProfile }}>
       {children}
     </AuthContext.Provider>
   );
