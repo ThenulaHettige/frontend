@@ -42,6 +42,7 @@ const Signup = () => {
     district: '',
     experience: '',
     contactNumber: '',
+    hourlyRate: '',
     password: '',
     confirmPassword: ''
   });
@@ -452,6 +453,19 @@ const Signup = () => {
           pattern="[0-9]{10}"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Hourly Rate (Rs.)</label>
+        <input
+          type="number"
+          name="hourlyRate"
+          value={providerForm.hourlyRate}
+          onChange={handleProviderChange}
+          required
+          min="0"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+        <p className="mt-1 text-sm text-gray-500">Enter your hourly rate in Sri Lankan Rupees</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Password</label>

@@ -249,6 +249,7 @@ const ProfileSettings = () => {
     experience: user?.experience || '',
     contactNumber: user?.contactNumber || '',
     address: user?.address || '',
+    hourlyRate: user?.hourlyRate || '',
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -359,6 +360,18 @@ const ProfileSettings = () => {
                 onChange={handleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Hourly Rate (Rs.)</label>
+              <input
+                type="number"
+                name="hourlyRate"
+                value={formData.hourlyRate}
+                onChange={handleChange}
+                min="0"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              <p className="mt-1 text-sm text-gray-500">Your hourly rate in Sri Lankan Rupees</p>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Address</label>
