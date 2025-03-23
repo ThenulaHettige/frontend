@@ -487,38 +487,137 @@ const Reviews = () => {
 // User Inquiries Component
 const UserInquiries = () => {
   const [inquiries, setInquiries] = useState([]);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
 
   useEffect(() => {
     // Load inquiries from localStorage or initialize with sample data
     const storedInquiries = JSON.parse(localStorage.getItem('inquiries'));
     if (!storedInquiries || storedInquiries.length === 0) {
-      // Import sample data dynamically
-      import('../data/sampleInquiries').then(({ sampleInquiries }) => {
-        localStorage.setItem('inquiries', JSON.stringify(sampleInquiries));
-        setInquiries(sampleInquiries);
-      });
+      const sampleInquiries = [
+        {
+          id: 1,
+          userName: "Michael Lee",
+          address: "78 Green Rd, Galle",
+          message: "Ceiling fan making loud noise and wobbling. Need urgent repair as it might fall.",
+          photo: "https://images.unsplash.com/photo-1575344499859-391c5b9d3b6a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 2,
+          userName: "Sarah Johnson",
+          address: "12 Beach Rd, Negombo",
+          message: "Main bathroom door hinges completely rusted and door is scraping the floor. Need replacement ASAP.",
+          photo: "https://images.unsplash.com/photo-1534609146522-5d8de8a50058?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 3,
+          userName: "David Wilson",
+          address: "34 Lake View, Nuwara Eliya",
+          message: "Severe water damage on living room wall after recent rains. Mold starting to form. Need assessment and repair.",
+          photo: "https://images.unsplash.com/photo-1562518015-4d9a37e6980a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 4,
+          userName: "Emma Thompson",
+          address: "45 Hill St, Kandy",
+          message: "Complete kitchen sink blockage. Water not draining at all. Multiple attempts to clear with plunger failed.",
+          photo: "https://images.unsplash.com/photo-1573298626282-9855589c7d36?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 5,
+          userName: "James Anderson",
+          address: "89 Palm Grove, Colombo 5",
+          message: "Need installation of 4 new electrical outlets and ethernet ports for home office setup. Walls are concrete.",
+          photo: "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 6,
+          userName: "Lisa Chen",
+          address: "23 Beach Front, Mount Lavinia",
+          message: "2-ton AC unit leaking heavily and making grinding noise. Room not cooling below 28°C.",
+          photo: "https://images.unsplash.com/photo-1581275288578-bef1b4e35e8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 7,
+          userName: "Robert Kumar",
+          address: "56 Temple Rd, Matara",
+          message: "Master bathroom needs complete retiling. Current tiles cracking and some falling off. Area: 8x10 feet.",
+          photo: "https://images.unsplash.com/photo-1519690889869-e705e59f72e1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 8,
+          userName: "Maria Silva",
+          address: "67 Green Lane, Batticaloa",
+          message: "All bathroom taps leaking severely. Need replacement of washers or full tap replacement if necessary.",
+          photo: "https://images.unsplash.com/photo-1585587161406-4c6ef6b6b9d2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 9,
+          userName: "Tom Parker",
+          address: "90 Hill View, Badulla",
+          message: "Garden irrigation system broken in multiple places. Need repair of main line and replacement of 5 sprinkler heads.",
+          photo: "https://images.unsplash.com/photo-1564944426391-6be821d81282?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        },
+        {
+          id: 10,
+          userName: "Priya Patel",
+          address: "34 Lake Road, Kurunegala",
+          message: "Need professional installation of 3 new ceiling fans with LED lights. Existing wiring needs inspection.",
+          photo: "https://images.unsplash.com/photo-1513694203232-719a280e857b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          status: "pending"
+        }
+      ];
+      localStorage.setItem('inquiries', JSON.stringify(sampleInquiries));
+      setInquiries(sampleInquiries);
     } else {
       setInquiries(storedInquiries);
     }
   }, []);
 
+  const showPopupNotification = (message) => {
+    setNotificationMessage(message);
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
+  };
+
   const handleTakeOrder = (id) => {
     const updatedInquiries = inquiries.map(inquiry => 
-      inquiry.id === id ? { ...inquiry, status: 'accepted' } : inquiry
+      inquiry.id === id ? { ...inquiry, status: 'taken' } : inquiry
     );
     setInquiries(updatedInquiries);
     localStorage.setItem('inquiries', JSON.stringify(updatedInquiries));
+    showPopupNotification('Order has been taken successfully!');
   };
 
   const handleReject = (id) => {
     const updatedInquiries = inquiries.filter(inquiry => inquiry.id !== id);
     setInquiries(updatedInquiries);
     localStorage.setItem('inquiries', JSON.stringify(updatedInquiries));
+    showPopupNotification('Order has been rejected.');
   };
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">User Inquiries</h1>
+
+      {/* Notification Popup */}
+      <div className={`fixed top-4 right-4 z-50 transition-all duration-500 transform ${showNotification ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative shadow-lg">
+          <span className="block sm:inline">{notificationMessage}</span>
+        </div>
+      </div>
+
       <div className="mt-6">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -557,22 +656,28 @@ const UserInquiries = () => {
                     <img
                       src={inquiry.photo}
                       alt="Problem"
-                      className="h-10 w-10 rounded-full cursor-pointer"
+                      className="h-16 w-16 rounded-lg object-cover cursor-pointer hover:scale-105 transition-transform"
                       onClick={() => window.open(inquiry.photo, '_blank')}
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleTakeOrder(inquiry.id)}
-                      className="text-green-600 hover:text-green-900"
-                    >
-                      Take Order
-                    </button>
+                    {inquiry.status === 'taken' ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        Taken
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleTakeOrder(inquiry.id)}
+                        className="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-md transition-colors"
+                      >
+                        Take Order
+                      </button>
+                    )}
                     <button
                       onClick={() => handleReject(inquiry.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md transition-colors ml-2"
                     >
-                      Reject
+                      Delete
                     </button>
                   </td>
                 </tr>
